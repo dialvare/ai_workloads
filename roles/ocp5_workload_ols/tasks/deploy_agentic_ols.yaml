@@ -14,7 +14,7 @@
       - ocp5_workload_ols_agentic_api_key != "changeme"
       - ocp5_workload_ols_agentic_api_key | length > 0
     fail_msg: >-
-      ocp5_workload_ols_agentic_api_key must be set to a real OpenAI API key
+      ocp5_workload_ols_agentic_api_key must be set to a real API key (OpenAI key or MaaS token)
       when ocp5_workload_ols_enable_agentic is true.
 
 - name: Create temp directory for agentic operator repo clone
@@ -39,12 +39,18 @@
 - name: Build deploy flags
   ansible.builtin.set_fact:
     # yamllint disable rule:line-length
+    _ocp5_workload_ols_agentic_effective_sandbox_image: "{{ ocp5_workload_ols_agentic_maas_sandbox_image if ocp5_workload_ols_agentic_provider == 'maas' else ocp5_workload_ols_agentic_sandbox_image }}"
+    _ocp5_workload_ols_agentic_effective_model: "{{ ocp5_workload_ols_agentic_maas_model if ocp5_workload_ols_agentic_provider == 'maas' else ocp5_workload_ols_agentic_model }}"
+    _ocp5_workload_ols_agentic_effective_creds_secret: "{{ 'llm-creds-maas' if ocp5_workload_ols_agentic_provider == 'maas' else 'llm-creds-openai' }}"
     _ocp5_workload_ols_otel_flags: "{{ [('--image=' + ocp5_workload_ols_agentic_otel_image) if ocp5_workload_ols_agentic_otel_image else '', '--postgres' if ocp5_workload_ols_agentic_enable_postgres | bool else ''] | select | join(' ') }}"
-    _ocp5_workload_ols_configmap_flags: "{{ ('--sandbox-image=' + ocp5_workload_ols_agentic_sandbox_image) if ocp5_workload_ols_agentic_sandbox_image else '' }}"
     _ocp5_workload_ols_operator_flags: "{{ ('--image=' + ocp5_workload_ols_agentic_operator_image) if ocp5_workload_ols_agentic_operator_image else '' }}"
     _ocp5_workload_ols_alerts_adapter_flags: "{{ ('--image=' + ocp5_workload_ols_agentic_alerts_adapter_image) if ocp5_workload_ols_agentic_alerts_adapter_image else '' }}"
     _ocp5_workload_ols_console_flags: "{{ ('--image=' + ocp5_workload_ols_agentic_console_image) if ocp5_workload_ols_agentic_console_image else '' }}"
     # yamllint enable rule:line-length
+
+- name: Build configmap deploy flags
+  ansible.builtin.set_fact:
+    _ocp5_workload_ols_configmap_flags: "{{ ('--sandbox-image=' + _ocp5_workload_ols_agentic_effective_sandbox_image) if _ocp5_workload_ols_agentic_effective_sandbox_image else '' }}"
 
 # --------------------------------
 # Pre-flight: wait for classic OLS to be fully reconciled before freezing
@@ -199,19 +205,19 @@
   changed_when: true
 
 # --------------------------------
-# LLM credentials — user-provided OpenAI API key
-# Creates llm-creds-openai directly from ocp5_workload_ols_agentic_api_key.
-# This is completely independent from the classic OLS 'credentials' Secret.
+# LLM credentials — provider API key for the agentic component.
+# Secret name is provider-scoped (llm-creds-openai or llm-creds-maas).
+# Completely independent from the classic OLS credential secrets.
 # --------------------------------
 
-- name: Create llm-creds-openai secret from user-provided API key
+- name: Create agentic LLM credentials secret
   kubernetes.core.k8s:
     state: present
     definition:
       apiVersion: v1
       kind: Secret
       metadata:
-        name: llm-creds-openai
+        name: "{{ _ocp5_workload_ols_agentic_effective_creds_secret }}"
         namespace: "{{ ocp5_workload_ols_namespace }}"
       type: Opaque
       stringData:
@@ -229,9 +235,13 @@
         namespace: "{{ ocp5_workload_ols_namespace }}"
       spec:
         type: OpenAI
-        openAI:
-          credentialsSecret:
-            name: llm-creds-openai
+        openAI: >-
+          {{
+            {'url': ocp5_workload_ols_agentic_maas_url,
+             'credentialsSecret': {'name': _ocp5_workload_ols_agentic_effective_creds_secret}}
+            if ocp5_workload_ols_agentic_provider == 'maas'
+            else {'credentialsSecret': {'name': _ocp5_workload_ols_agentic_effective_creds_secret}}
+          }}
 
 - name: Apply Agent CR
   kubernetes.core.k8s:
@@ -245,7 +255,7 @@
       spec:
         llmProvider:
           name: openai
-        model: "{{ ocp5_workload_ols_agentic_model }}"
+        model: "{{ _ocp5_workload_ols_agentic_effective_model }}"
         timeouts:
           analysisSeconds: 120
           executionSeconds: 120
@@ -265,8 +275,9 @@
     msg: |
       Agentic OpenShift Lightspeed deployed successfully:
         - Namespace: {{ ocp5_workload_ols_namespace }}
-        - LLM endpoint: https://api.openai.com (direct OpenAI)
-        - Model: {{ ocp5_workload_ols_agentic_model }}
+        - Provider: {{ ocp5_workload_ols_agentic_provider }}
+        - LLM endpoint: {{ ocp5_workload_ols_agentic_maas_url if ocp5_workload_ols_agentic_provider == 'maas' else 'https://api.openai.com' }}
+        - Model: {{ _ocp5_workload_ols_agentic_effective_model }}
         - Alerts Adapter: {{ ocp5_workload_ols_agentic_enable_alerts_adapter }}
         - Console Plugin: {{ ocp5_workload_ols_agentic_enable_console }}
       Execution stage requires manual approval via AgenticRunApproval CR.

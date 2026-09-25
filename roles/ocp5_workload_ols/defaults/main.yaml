@@ -182,3 +182,11 @@ ocp5_workload_ols_agentic_sandbox_image: ""
 ocp5_workload_ols_agentic_console_image: ""
 ocp5_workload_ols_agentic_alerts_adapter_image: ""
 ocp5_workload_ols_agentic_otel_image: ""
+
+# Backend for the agentic component: openai (direct API key) or maas
+ocp5_workload_ols_agentic_provider: openai
+
+# MaaS-specific agentic settings (used when ocp5_workload_ols_agentic_provider: maas)
+ocp5_workload_ols_agentic_maas_url: "https://maas-rhdp.apps.maas.redhatworkshops.io/v1"
+ocp5_workload_ols_agentic_maas_model: "claude-sonnet-4-6"
+ocp5_workload_ols_agentic_maas_sandbox_image: "quay.io/dialvare/sandbox-fix:test4"
