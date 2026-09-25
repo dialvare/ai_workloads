@@ -263,9 +263,9 @@
           name: openai
         model: "{{ _ocp5_workload_ols_agentic_effective_model }}"
         timeouts:
-          analysisSeconds: 120
-          executionSeconds: 120
-          verificationSeconds: 120
+          analysisSeconds: 500
+          executionSeconds: 500
+          verificationSeconds: 500
 
 # --------------------------------
 # Cleanup and user info
