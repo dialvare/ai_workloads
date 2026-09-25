@@ -31,6 +31,12 @@
     depth: 1
     single_branch: true
 
+- name: Extend OTEL rollout timeout for slow nodes
+  ansible.builtin.replace:
+    path: "{{ r_agentic_tmp.path }}/repo/hack/quickstart/deploy-otel.sh"
+    regexp: '--timeout=120s'
+    replace: '--timeout=300s'
+
 # --------------------------------
 # Build optional flag strings
 # Empty string means no flag — quickstart scripts use their default image
