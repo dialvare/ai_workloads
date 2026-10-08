@@ -21,3 +21,18 @@
     install_operator_catalogsource_namespace: "{{ ocp5_workload_ols_catalogsource_namespace | default('') }}"
     install_operator_catalogsource_image: "{{ ocp5_workload_ols_catalog_snapshot_image | default('') }}"
     install_operator_catalogsource_image_tag: "{{ ocp5_workload_ols_catalog_snapshot_image_tag | default('') }}"
+
+- name: Patch CatalogSource to pre-extract catalog content
+  when: ocp5_workload_ols_use_catalog_snapshot | bool
+  kubernetes.core.k8s_json_patch:
+    api_version: operators.coreos.com/v1alpha1
+    kind: CatalogSource
+    name: "{{ ocp5_workload_ols_catalogsource_name }}"
+    namespace: "{{ ocp5_workload_ols_catalogsource_namespace }}"
+    patch:
+      - op: add
+        path: /spec/grpcPodConfig
+        value:
+          extractContent:
+            cacheDir: /tmp/cache
+            catalogDir: /configs
