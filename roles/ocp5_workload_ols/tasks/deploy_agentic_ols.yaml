@@ -77,7 +77,7 @@
     - r_app_server.resources | length > 0
     - r_app_server.resources[0].status.availableReplicas is defined
     - r_app_server.resources[0].status.availableReplicas >= 1
-  retries: 30
+  retries: 60
   delay: 20
 
 # --------------------------------
