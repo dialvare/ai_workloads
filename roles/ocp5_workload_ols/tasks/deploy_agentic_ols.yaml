@@ -238,7 +238,7 @@
       apiVersion: agentic.openshift.io/v1alpha1
       kind: LLMProvider
       metadata:
-        name: openai
+        name: "{{ ocp5_workload_ols_agentic_provider }}"
         namespace: "{{ ocp5_workload_ols_namespace }}"
       spec:
         type: OpenAI
@@ -261,7 +261,7 @@
         namespace: "{{ ocp5_workload_ols_namespace }}"
       spec:
         llmProvider:
-          name: openai
+          name: "{{ ocp5_workload_ols_agentic_provider }}"
         model: "{{ _ocp5_workload_ols_agentic_effective_model }}"
         timeouts:
           analysisSeconds: 500
