@@ -175,6 +175,7 @@ ocp5_workload_ols_agentic_repo_version: main
 ocp5_workload_ols_agentic_enable_alerts_adapter: true
 ocp5_workload_ols_agentic_enable_console: true
 ocp5_workload_ols_agentic_enable_postgres: false
+ocp5_workload_ols_agentic_enable_cluster_updates: false
 
 # Image overrides — empty string uses the quickstart script defaults (Konflux :main)
 ocp5_workload_ols_agentic_operator_image: ""

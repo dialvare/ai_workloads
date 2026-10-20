@@ -277,6 +277,20 @@
     path: "{{ r_agentic_tmp.path }}"
     state: absent
 
+# --------------------------------
+# Fauxinnati — fake update server
+# --------------------------------
+
+- name: Configure fauxinnati update graph
+  when: ocp5_workload_ols_agentic_enable_cluster_updates | bool
+  ansible.builtin.shell:
+    cmd: >
+      oc patch clusterversion version --type json -p
+      '[{"op": "add", "path": "/spec/upstream", "value": "https://fauxinnati-fauxinnati.apps.ota-stage.q2z4.p1.openshiftapps.com/api/upgrades_info/graph"},
+        {"op": "add", "path": "/spec/channel", "value": "simple"}]'
+    executable: /bin/bash
+  changed_when: true
+
 - name: Set user info for Agentic OLS
   agnosticd.core.agnosticd_user_info:
     msg: |
