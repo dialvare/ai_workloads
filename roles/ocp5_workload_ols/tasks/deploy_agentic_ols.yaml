@@ -150,6 +150,12 @@
     NAMESPACE: "{{ ocp5_workload_ols_namespace }}"
   changed_when: true
 
+- name: Patch deploy-operator.sh to set Analysis approval to Manual
+  ansible.builtin.replace:
+    path: "{{ r_agentic_tmp.path }}/repo/hack/quickstart/deploy-operator.sh"
+    regexp: '(- name: Analysis\s*\n\s*approval:) Automatic'
+    replace: '\1 Manual'
+
 - name: Deploy agentic operator
   ansible.builtin.shell:
     cmd: "bash deploy-operator.sh {{ _ocp5_workload_ols_operator_flags | default('') | trim }}"
