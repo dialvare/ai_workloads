@@ -310,7 +310,8 @@
   ansible.builtin.shell:
     cmd: >
       oc patch clusterversion version --type json -p
-      '[{"op": "add", "path": "/spec/upstream", "value": "https://fauxinnati-fauxinnati.apps.ota-stage.q2z4.p1.openshiftapps.com/api/upgrades_info/graph"},
+      '[{"op": "add", "path": "/spec/upstream",
+        "value": "https://fauxinnati-fauxinnati.apps.ota-stage.q2z4.p1.openshiftapps.com/api/upgrades_info/graph"},
         {"op": "add", "path": "/spec/channel", "value": "simple"}]'
     executable: /bin/bash
   changed_when: true
