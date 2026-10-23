@@ -274,6 +274,24 @@
           executionSeconds: 500
           verificationSeconds: 500
 
+- name: Apply smart Agent CR
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: agentic.openshift.io/v1alpha1
+      kind: Agent
+      metadata:
+        name: smart
+        namespace: "{{ ocp5_workload_ols_namespace }}"
+      spec:
+        llmProvider:
+          name: "{{ ocp5_workload_ols_agentic_provider }}"
+        model: "{{ _ocp5_workload_ols_agentic_effective_model }}"
+        timeouts:
+          analysisSeconds: 500
+          executionSeconds: 500
+          verificationSeconds: 500
+
 # --------------------------------
 # Cleanup and user info
 # --------------------------------
